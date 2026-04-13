@@ -69,7 +69,8 @@ const performEvaluation = async ({
     sectionNumber: section.sectionNumber,
     act: section.act,
     category: section.category,
-    offenceName: section.offenceName
+    offenceName: section.offenceName,
+    description: section.description || ""
   }));
 
   return {

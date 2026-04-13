@@ -30,7 +30,4 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Test / coverage
-coverage/
-.nyc_output/
 

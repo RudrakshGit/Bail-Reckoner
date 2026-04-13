@@ -66,6 +66,13 @@ body {
   background-repeat: no-repeat;
 }
 
+@media (max-width: 768px) {
+  html,
+  body {
+    background-attachment: scroll;
+  }
+}
+
 #root {
   width: 100%;
   max-width: 100%;

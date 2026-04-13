@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const connectDb = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
   try {
     const connectionHost = await mongoose.connect(process.env.MONGO_URI);
 
@@ -11,7 +15,10 @@ const connectDb = async () => {
 
   } catch (error) {
     console.error("MongoDB connection error:", error);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
+    throw error;
   }
 };
 

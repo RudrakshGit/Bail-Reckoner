@@ -18,6 +18,15 @@ export default function BailForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const highestSectionDetail = result?.sectionsEvaluated?.find(
+    (x) => x.sectionNumber === result?.highestPunishmentSection
+  );
+  const highestSectionDescription = highestSectionDetail
+    ? highestSectionDetail.description
+      ? `${highestSectionDetail.offenceName} (i.e ${highestSectionDetail.description})`
+      : highestSectionDetail.offenceName
+    : "";
+
   const clearAll = () => {
     setSections("");
     setTimeServedYears("");
@@ -142,6 +151,12 @@ export default function BailForm() {
                   <code>{result.highestPunishmentSection}</code>
                 </div>
               </div>
+              {highestSectionDescription ? (
+                <div className="uiKvRow">
+                  <div className="uiKvK">Description</div>
+                  <div className="uiKvV uiKvVClamp">{highestSectionDescription}</div>
+                </div>
+              ) : null}
               <div className="uiKvRow">
                 <div className="uiKvK">Max punishment</div>
                 <div className="uiKvV">{result.maxPunishmentYears} years</div>
