@@ -34,6 +34,16 @@ export const createUndertrial = async (data) => {
   return payload;
 };
 
+// Fetch stored undertrial (includes lastEvaluation when present)
+export const getUndertrialById = async (id) => {
+  const res = await fetch(`${BASE_URL}/undertrial/${encodeURIComponent(id)}`);
+  const payload = await res.json();
+  if (!res.ok) {
+    throw new Error(payload.message || "Error fetching undertrial");
+  }
+  return payload;
+};
+
 // Evaluate Undertrial
 export const evaluateUndertrial = async (id) => {
   const res = await fetch(`${BASE_URL}/bail/evaluate-undertrial/${id}`, {
