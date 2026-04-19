@@ -63,6 +63,23 @@ npm run seed
 
 Seeds legal sections from `server/data/legalSections.json`.
 
+## Legal sections dataset
+
+`server/data/legalSections.json` is the source for the `LegalSection` MongoDB collection. It is a JSON array of **442** offence rows, each with fields such as `sectionNumber`, `act`, `offenceName`, `category`, `bailable`, and `maxPunishmentYears` (see `server/models/LegalSection.js`).
+
+Those rows cover **6** acts (by the `act` string stored in the file):
+
+| Act | Sections | Notes |
+|-----|----------|--------|
+| IPC | 379 | Indian Penal Code — largest share of entries. |
+| IT Act | 21 | Information technology / cyber-related offences. |
+| POCSO Act | 19 | Protection of Children from Sexual Offences Act. |
+| NDPS Act | 15 | Narcotic Drugs and Psychotropic Substances Act. |
+| SC/ST Act 1989 | 5 | Scheduled Castes and Scheduled Tribes (Prevention of Atrocities) Act. |
+| Foreigners Act 1946 | 3 | Foreign nationals — entry, stay, and document-related offences. |
+
+An older snapshot lives at `server/data/legalSectionsOld.json` (not used by the seed script).
+
 ## Deployment
 
 - Backend: Vercel project with root directory `server/`

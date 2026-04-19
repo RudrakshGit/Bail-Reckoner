@@ -7,6 +7,7 @@ exports.createUndertrial = async (req, res) => {
       prisonerId,
       sections,
       timeServedYears,
+      previousCriminalRecords = 0,
       riskProfile
     } = req.body;
 
@@ -20,6 +21,10 @@ exports.createUndertrial = async (req, res) => {
 
     if (typeof timeServedYears !== "number" || Number.isNaN(timeServedYears) || timeServedYears < 0) {
       return res.status(400).json({ message: "timeServedYears must be a non-negative number" });
+    }
+
+    if (typeof previousCriminalRecords !== "number" || Number.isNaN(previousCriminalRecords) || previousCriminalRecords < 0) {
+      return res.status(400).json({ message: "previousCriminalRecords must be a non-negative number" });
     }
 
     const flightRisk = riskProfile?.flightRisk ?? 0;
@@ -39,6 +44,7 @@ exports.createUndertrial = async (req, res) => {
       prisonerId,
       sections,
       timeServedYears,
+      previousCriminalRecords,
       riskProfile: {
         flightRisk,
         witnessRisk

@@ -13,6 +13,7 @@ export default function UndertrialForm() {
   const [sections, setSections] = useState("");
   const [sectionSuggestions, setSectionSuggestions] = useState([]);
   const [timeServedYears, setTimeServedYears] = useState("");
+  const [previousCriminalRecords, setPreviousCriminalRecords] = useState(0);
   const [flightRisk, setFlightRisk] = useState(0);
   const [witnessRisk, setWitnessRisk] = useState(0);
 
@@ -26,6 +27,7 @@ export default function UndertrialForm() {
     setPrisonerId("");
     setSections("");
     setTimeServedYears("");
+    setPreviousCriminalRecords(0);
     setFlightRisk(0);
     setWitnessRisk(0);
     setResponse(null);
@@ -62,6 +64,7 @@ export default function UndertrialForm() {
       prisonerId,
       sections: normalizeSectionsInput(sections),
       timeServedYears: Number(timeServedYears),
+      previousCriminalRecords: Number(previousCriminalRecords),
       riskProfile: {
         flightRisk: Number(flightRisk),
         witnessRisk: Number(witnessRisk),
@@ -129,6 +132,15 @@ export default function UndertrialForm() {
             placeholder="e.g., 1.5"
             value={timeServedYears}
             onChange={(e) => setTimeServedYears(e.target.value)}
+          />
+        </FormField>
+
+        <FormField label="Previous criminal records" hint="Count of previous cases">
+          <Input
+            inputMode="numeric"
+            placeholder="e.g., 0"
+            value={previousCriminalRecords}
+            onChange={(e) => setPreviousCriminalRecords(e.target.value)}
           />
         </FormField>
 

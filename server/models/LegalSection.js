@@ -21,10 +21,13 @@ const legalSectionSchema = new mongoose.Schema({
     // "SC_ST_OFFENCE"
     // "ECONOMIC_OFFENCE"
     // "OFFENCE_AGAINST_STATE"
+    // "CRIME_AGAINST_FOREIGNERS"
     // "GENERAL"
   },
 
   maxPunishmentYears: { type: Number, required: true },
+  lifeImprisonmentPossible: { type: Boolean, default: false },
+  deathPenaltyPossible: { type: Boolean, default: false },
   bailable: { type: Boolean, required: true },
   compoundable: { type: Boolean, required: true },
 

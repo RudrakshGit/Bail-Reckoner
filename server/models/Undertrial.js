@@ -5,6 +5,7 @@ const undertrialSchema = new mongoose.Schema({
   prisonerId: { type: String, required: true },
   sections: [{ type: String, required: true }],
   timeServedYears: { type: Number, required: true },
+  previousCriminalRecords: { type: Number, default: 0 },
 
   riskProfile: {
     flightRisk: { type: Number, default: 0 },

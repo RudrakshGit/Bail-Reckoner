@@ -5,7 +5,8 @@ const performEvaluation = async ({
   sections,
   timeServedYears,
   flightRisk = 0,
-  witnessRisk = 0
+  witnessRisk = 0,
+  previousCriminalRecords = 0
 }) => {
 
   const legalData = await LegalSection.find({
@@ -16,39 +17,58 @@ const performEvaluation = async ({
     throw new Error("No matching legal sections found");
   }
 
+  const isLifeOrDeathSection = (section) => {
+    const text = `${section.offenceName || ""} ${section.description || ""}`.toLowerCase();
+    return (
+      section.deathPenaltyPossible === true ||
+      section.lifeImprisonmentPossible === true ||
+      text.includes("death") ||
+      text.includes("imprisonment for life") ||
+      text.includes("life imprisonment")
+    );
+  };
+
   let maxPunishment = 0;
   let highestSection = null;
-  let allBailable = true;
+  let highestSectionHasLifeOrDeath = false;
 
-  legalData.forEach(section => {
-    if (section.maxPunishmentYears > maxPunishment) {
+  legalData.forEach((section) => {
+    const sectionIsLifeOrDeath = isLifeOrDeathSection(section);
+    if (sectionIsLifeOrDeath && !highestSectionHasLifeOrDeath) {
+      highestSection = section.sectionNumber;
+      highestSectionHasLifeOrDeath = true;
+      return;
+    }
+    if (!sectionIsLifeOrDeath && !highestSectionHasLifeOrDeath && section.maxPunishmentYears > maxPunishment) {
       maxPunishment = section.maxPunishmentYears;
       highestSection = section.sectionNumber;
     }
-
-    if (!section.bailable) {
-      allBailable = false;
-    }
   });
 
-  const riskScore = flightRisk + witnessRisk;
+  const nonBailableSections = legalData.filter((section) => !section.bailable);
+  const nonBailableOffenceNames = nonBailableSections.map((section) => section.offenceName);
+  const hasSeverePunishment = nonBailableSections.some((section) => isLifeOrDeathSection(section));
+
+  const priorRecordRisk = Math.min(previousCriminalRecords * 2, 6);
+  const riskScore = flightRisk + witnessRisk + priorRecordRisk;
   const RISK_THRESHOLD = 7;
 
   let eligible = false;
   let reason = "";
 
-  if (riskScore > RISK_THRESHOLD) {
+  if (nonBailableSections.length > 0) {
+    const offences = nonBailableOffenceNames.join(", ");
+    const isPlural = nonBailableSections.length > 1;
+    reason = `The ${isPlural ? "offences" : "offence"} "${offences}" ${isPlural ? "are" : "is"} non bailable and the decision rests solely with the Judicial Magistrate/Judge.`;
+    if (hasSeverePunishment) {
+      reason += " The punishment profile indicates severe offence gravity (life/death or equivalent), requiring stricter judicial scrutiny.";
+    }
+  } else if (riskScore > RISK_THRESHOLD) {
     eligible = false;
     reason = "High judicial risk (absconding or witness influence)";
-  } else if (allBailable) {
+  } else {
     eligible = true;
     reason = "All offences are bailable";
-  } else if (timeServedYears >= maxPunishment / 2 && riskScore <= RISK_THRESHOLD) {
-    eligible = true;
-    reason = "Half-term served and judicial risk acceptable";
-  } else {
-    eligible = false;
-    reason = "Half-term not completed";
   }
 
   // Procedural Requirements
@@ -78,10 +98,13 @@ const performEvaluation = async ({
     reason,
     sectionsEvaluated: sectionDetails,
     highestPunishmentSection: highestSection,
-    maxPunishmentYears: maxPunishment,
-    halfTerm: maxPunishment / 2,
+    maxPunishmentYears: highestSectionHasLifeOrDeath ? null : maxPunishment,
+    halfTerm: highestSectionHasLifeOrDeath ? null : maxPunishment / 2,
     timeServedYears,
     riskScore,
+    previousCriminalRecords,
+    highestSectionHasLifeOrDeath,
+    judicialDiscretionRequired: nonBailableSections.length > 0,
     proceduralRequirements
   };
 };
@@ -92,7 +115,8 @@ exports.evaluateBail = async (req, res) => {
     sections,
     timeServedYears,
     flightRisk = 0,
-    witnessRisk = 0
+    witnessRisk = 0,
+    previousCriminalRecords = 0
   } = req.body;
 
   if (!sections || !Array.isArray(sections) || sections.length === 0) {
@@ -123,12 +147,21 @@ exports.evaluateBail = async (req, res) => {
     return res.status(400).json({ message: "Risk scores must be between 0 and 10" });
   }
 
+  if (
+    typeof previousCriminalRecords !== "number" ||
+    Number.isNaN(previousCriminalRecords) ||
+    previousCriminalRecords < 0
+  ) {
+    return res.status(400).json({ message: "previousCriminalRecords must be a non-negative number" });
+  }
+
   try {
     const result = await performEvaluation({
       sections,
       timeServedYears,
       flightRisk,
-      witnessRisk
+      witnessRisk,
+      previousCriminalRecords
     });
 
     res.status(200).json(result);
@@ -156,7 +189,8 @@ exports.evaluateUndertrialBail = async (req, res) => {
       sections: undertrial.sections,
       timeServedYears: undertrial.timeServedYears,
       flightRisk: undertrial.riskProfile.flightRisk,
-      witnessRisk: undertrial.riskProfile.witnessRisk
+      witnessRisk: undertrial.riskProfile.witnessRisk,
+      previousCriminalRecords: undertrial.previousCriminalRecords || 0
     });
 
     undertrial.lastEvaluation = {

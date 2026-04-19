@@ -12,6 +12,7 @@ export default function BailForm() {
   const [sections, setSections] = useState("");
   const [sectionSuggestions, setSectionSuggestions] = useState([]);
   const [timeServedYears, setTimeServedYears] = useState("");
+  const [previousCriminalRecords, setPreviousCriminalRecords] = useState(0);
   const [flightRisk, setFlightRisk] = useState(0);
   const [witnessRisk, setWitnessRisk] = useState(0);
   const [result, setResult] = useState(null);
@@ -26,17 +27,17 @@ export default function BailForm() {
       ? `${highestSectionDetail.offenceName} (i.e ${highestSectionDetail.description})`
       : highestSectionDetail.offenceName
     : "";
+  const exceedsMaxPunishment =
+    result?.maxPunishmentYears != null &&
+    typeof result?.timeServedYears === "number" &&
+    result.timeServedYears > result.maxPunishmentYears;
 
   const clearAll = () => {
     setSections("");
     setTimeServedYears("");
+    setPreviousCriminalRecords(0);
     setFlightRisk(0);
     setWitnessRisk(0);
-    setResult(null);
-    setError(null);
-  };
-
-  const clearDecision = () => {
     setResult(null);
     setError(null);
   };
@@ -68,6 +69,7 @@ export default function BailForm() {
     const data = {
       sections: normalizeSectionsInput(sections),
       timeServedYears: Number(timeServedYears),
+      previousCriminalRecords: Number(previousCriminalRecords),
       flightRisk: Number(flightRisk),
       witnessRisk: Number(witnessRisk),
     };
@@ -109,6 +111,15 @@ export default function BailForm() {
             />
           </FormField>
 
+          <FormField label="Previous criminal records" hint="Count of previous cases">
+            <Input
+              inputMode="numeric"
+              placeholder="e.g., 0"
+              value={previousCriminalRecords}
+              onChange={(e) => setPreviousCriminalRecords(e.target.value)}
+            />
+          </FormField>
+
           <div className="uiGrid2">
             <RiskSlider label="Flight risk" value={flightRisk} onChange={setFlightRisk} />
             <RiskSlider label="Witness risk" value={witnessRisk} onChange={setWitnessRisk} />
@@ -127,7 +138,7 @@ export default function BailForm() {
         ) : null}
       </Card>
 
-      <Card title="Decision" subtitle="Eligibility and computed decision context." onClear={clearDecision}>
+      <Card title="Decision" subtitle="Eligibility and computed decision context.">
         {!result && !loading ? (
           <div className="uiEmpty">
             <div className="uiEmptyTitle">No evaluation yet</div>
@@ -159,17 +170,36 @@ export default function BailForm() {
               ) : null}
               <div className="uiKvRow">
                 <div className="uiKvK">Max punishment</div>
-                <div className="uiKvV">{result.maxPunishmentYears} years</div>
+                <div className="uiKvV">
+                  {result.maxPunishmentYears == null
+                    ? "Not applicable (Life/Death punishment profile)"
+                    : `${result.maxPunishmentYears} years`}
+                </div>
               </div>
               <div className="uiKvRow">
                 <div className="uiKvK">Half-term</div>
-                <div className="uiKvV">{result.halfTerm} years</div>
+                <div className="uiKvV">
+                  {result.halfTerm == null ? "Not applicable" : `${result.halfTerm} years`}
+                </div>
               </div>
               <div className="uiKvRow">
                 <div className="uiKvK">Risk score</div>
                 <div className="uiKvV">{result.riskScore}</div>
               </div>
+              <div className="uiKvRow">
+                <div className="uiKvK">Previous records</div>
+                <div className="uiKvV">{result.previousCriminalRecords ?? 0}</div>
+              </div>
             </div>
+
+            {exceedsMaxPunishment ? (
+              <div className="uiAlert uiAlertOk">
+                <div className="uiAlertTitle">Note</div>
+                <div className="uiAlertBody">
+                  Time served is higher than the listed maximum punishment for the selected highest section.
+                </div>
+              </div>
+            ) : null}
 
             {result.proceduralRequirements ? (
               <div className="uiPills">
