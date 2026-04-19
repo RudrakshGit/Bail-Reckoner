@@ -972,12 +972,24 @@ html[data-theme="light"] .heroOrb {
   }
 
   .toolsCarouselMeta {
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.5fr) minmax(0, 0.75fr);
+    gap: 4px;
     width: calc(100vw - 96px);
-    padding: 4px 6px;
+    padding: 4px 4px;
   }
 
-  .toolsCarouselMetaValue {
+  .toolsCarouselMetaBtnSide .toolsCarouselMetaValue {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .toolsCarouselMetaBtnCurrent .toolsCarouselMetaValue {
     font-size: 12px;
+  }
+
+  .toolsCarouselMetaBtnSide {
+    padding: 4px 2px;
   }
 }
 
