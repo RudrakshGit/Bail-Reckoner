@@ -3,8 +3,11 @@ import UndertrialForm from "./components/UndertrialForm";
 import UndertrialEvaluation from "./components/UndertrialEvaluation";
 import AboutPage from "./components/AboutPage";
 import ExportEvaluationModal from "./components/ExportEvaluationModal";
+import ThemeToggle from "./components/ThemeToggle";
 import "./App.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+const THEME_KEY = "bail-reckoner-theme";
 
 const FEEDBACK_EMAIL = "rudrakshwillnotreply@gmail.com";
 const DEFAULT_REPO_URL = "https://github.com/RudrakshGit/Bail-Reckoner";
@@ -29,6 +32,28 @@ function App() {
   const [currentPage, setCurrentPage] = useState("home");
   const [toolIndex, setToolIndex] = useState(0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "dark";
+    try {
+      const v = window.localStorage.getItem(THEME_KEY);
+      return v === "light" || v === "dark" ? v : "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      window.localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      /* ignore */
+    }
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  }, []);
 
   const toolPages = useMemo(
     () => [
@@ -99,9 +124,12 @@ function App() {
           <img className="menuHomeIconImg" src="/home.png" alt="" aria-hidden="true" />
         </button>
 
-        <button className="menuBtn" type="button" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
-          <span className="menuIcon" />
-        </button>
+        <div className="menuBarRight">
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <button className="menuBtn" type="button" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+            <span className="menuIcon" />
+          </button>
+        </div>
       </nav>
 
       {drawerOpen ? (
@@ -212,7 +240,6 @@ function App() {
               </div>
 
               <div className="heroContent">
-                <h2 className="heroTitle">Bail Reckoner</h2>
                 <p className="heroSubtitle">
                   With precision, insight, and dedication, we simplify complex bail eligibility workflows.
                 </p>
