@@ -1256,9 +1256,9 @@ html[data-theme="light"] .uiCard .uiBtnSecondary {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--accent-bg) 100%, transparent 0%),
-    color-mix(in srgb, var(--accent-bg) 55%, transparent 45%)
+    color-mix(in srgb, var(--accent-bg) 55%, transparent 50%)
   );
-  color: var(--text-h);
+  color: #f1e1a8;
   font-weight: 700;
   letter-spacing: 0.2px;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
