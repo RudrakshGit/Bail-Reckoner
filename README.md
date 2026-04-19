@@ -41,14 +41,6 @@ cd client
 npm install
 ```
 
-Create `client/.env` (optional):
-
-```bash
-VITE_API_BASE_URL=http://localhost:5000
-# Optional: override the in-app “Repository” menu link (defaults to the project GitHub repo)
-# VITE_REPO_URL=https://github.com/RudrakshGit/Bail-Reckoner
-```
-
 Start frontend:
 
 ```bash
