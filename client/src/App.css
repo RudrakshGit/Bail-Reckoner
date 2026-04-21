@@ -1,4 +1,9 @@
 /* Theme tokens: surfaces swap between dark (default) and light */
+html {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, 
+              background 0.4s ease, background-image 0.4s ease;
+}
+
 html[data-theme="dark"] {
   color-scheme: dark;
   /* Dark + Gold legal-tech theme (based on provided logo) */
@@ -72,7 +77,7 @@ html[data-theme="light"] {
     radial-gradient(120% 140% at 20% 10%, rgba(154, 116, 40, 0.18), rgba(154, 116, 40, 0.04) 52%, transparent 70%),
     linear-gradient(180deg, rgba(255, 253, 248, 0.95), rgba(250, 246, 238, 0.82));
   --chrome-border-strong: rgba(154, 116, 40, 0.42);
-  --menu-icon-bar: rgba(95, 72, 28, 0.92);
+  --menu-icon-bar: #d4a940;
 
   --overlay-scrim: rgba(40, 36, 30, 0.38);
   --panel-side: rgba(255, 252, 247, 0.92);
@@ -150,12 +155,6 @@ html[data-theme="light"] .menuBar .themeToggle:hover {
     0 10px 20px rgba(64, 55, 41, 0.2);
 }
 
-html[data-theme="light"] .menuBar .menuIcon,
-html[data-theme="light"] .menuBar .menuIcon::before,
-html[data-theme="light"] .menuBar .menuIcon::after {
-  background: rgba(95, 72, 28, 0.92);
-}
-
 html[data-theme="light"] .menuBar .themeToggleTrack {
   border-color: rgba(255, 255, 255, 0.28);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
@@ -175,14 +174,15 @@ html[data-theme="dark"] .menuBar .themeToggleTrack {
 }
 
 .themeToggle {
-  padding: 0;
+  padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
   cursor: pointer;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 52px;
+  width: 44px;
   height: 38px;
   box-sizing: border-box;
   border-radius: 999px;
@@ -194,7 +194,19 @@ html[data-theme="dark"] .menuBar .themeToggleTrack {
     inset 0 1px 0 rgba(255, 255, 255, 0.28),
     inset 0 -1px 0 rgba(255, 255, 255, 0.08),
     0 10px 22px rgba(0, 0, 0, 0.22);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.4s ease;
+}
+
+.themeToggle:hover {
+  transform: scale(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+.themeToggle:active {
+  transform: scale(0.98);
 }
 
 .themeToggle:focus-visible {
@@ -212,68 +224,15 @@ html[data-theme="dark"] .menuBar .themeToggleTrack {
   border-radius: inherit;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.06) 45%, transparent 70%);
   pointer-events: none;
+  transition: background 0.4s ease;
 }
 
-.themeToggleTrack {
-  position: relative;
-  width: 49px;
-  height: 30px;
-  border-radius: 999px;
-  border: 1px solid var(--theme-toggle-track-border);
-  box-sizing: border-box;
-  background: var(--theme-toggle-track);
-}
-
-.themeToggleMoon {
-  position: absolute;
-  left: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: inset -3px 0 0 1px #f0d060;
-  opacity: 0.95;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.themeToggleDay {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
+.themeIcon {
+  font-size: 20px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  line-height: 1;
-  color: #ffcc33;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.95;
-}
-
-.themeToggleKnob {
-  position: absolute;
-  top: 50%;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(165deg, #d8b25c29, #e6b422);
-  transform: translateY(-50%);
-  transition: transform 0.24s cubic-bezier(0.2, 0.9, 0.2, 1);
-  box-shadow:
-  inset 0 0 0 1px rgba(216, 178, 92, 0.16),
-  0 8px 16px #d8b25c29;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.themeToggleTrack[data-theme="light"] .themeToggleKnob {
-  transform: translateY(-50%) translateX(22px);
+  animation: iconFade 0.4s ease;
 }
 
 .menuLogo {
@@ -1714,4 +1673,50 @@ html[data-theme="light"] .uiCard .uiBtnSecondary {
   .carouselTrack {
     transition: transform 260ms ease-out;
   }
+}
+
+@keyframes iconFade {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotate(-15deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.docSection {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.docTitle {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #5a4630;
+}
+
+.docButtons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.docBtn {
+  border: 1px solid color-mix(in srgb, var(--accent-border) 65%, transparent);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.docBtn:hover,
+.aboutPageBackBtn:hover {
+  opacity: 0.9;
 }

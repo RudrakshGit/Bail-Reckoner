@@ -7,14 +7,13 @@ export default function ThemeToggle({ theme, onToggle }) {
       className="themeToggle"
       onClick={onToggle}
       aria-label={`Switch to ${nextLabel} theme`}
-      aria-pressed={theme === "light"}
-      title={`${theme === "dark" ? "Dark" : "Light"} theme (switch to ${nextLabel})`}
+      title={`Current: ${theme === "dark" ? "Dark" : "Light"} theme`}
     >
-      <span className="themeToggleTrack" data-theme={theme}>
-        <span className="themeToggleMoon" aria-hidden />
-        <span className="themeToggleDay" aria-hidden>☀</span>
-        <span className="themeToggleKnob" />
-      </span>
+      {theme === "dark" ? (
+        <span className="themeIcon themeMoon" aria-hidden="true">🌙</span>
+      ) : (
+        <span className="themeIcon themeSun" aria-hidden="true">☀️</span>
+      )}
     </button>
   );
 }
