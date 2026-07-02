@@ -1,3 +1,4 @@
+import { Routes, Route, useNavigate } from "react-router-dom";
 import BailForm from "./components/BailForm";
 import UndertrialForm from "./components/UndertrialForm";
 import UndertrialEvaluation from "./components/UndertrialEvaluation";
@@ -27,9 +28,150 @@ const SECTION_ID_TO_INDEX = {
   [SECTION_IDS.evaluate]: 2,
 };
 
+function HomePage({ toolIndex, setToolIndex, setDrawerOpen, setExportModalOpen }) {
+  const toolPages = useMemo(
+    () => [
+      {
+        id: SECTION_IDS.bail,
+        title: "Direct Bail Evaluation",
+        node: <BailForm />,
+      },
+      {
+        id: SECTION_IDS.create,
+        title: "Create Undertrial Record",
+        node: <UndertrialForm />,
+      },
+      {
+        id: SECTION_IDS.evaluate,
+        title: "Evaluate Stored Undertrial",
+        node: <UndertrialEvaluation />,
+      },
+    ],
+    []
+  );
+
+  const toolCount = toolPages.length;
+  const canPrev = toolIndex > 0;
+  const canNext = toolIndex < toolCount - 1;
+  const prev = () => setToolIndex((i) => Math.max(0, i - 1));
+  const next = () => setToolIndex((i) => Math.min(toolCount - 1, i + 1));
+
+  const currentTitle = toolPages[toolIndex]?.title ?? "";
+  const prevTitle = toolPages[toolIndex - 1]?.title ?? "";
+  const nextTitle = toolPages[toolIndex + 1]?.title ?? "";
+
+  return (
+    <>
+      <section className="heroSection" aria-label="Introduction">
+        <div className="heroOrb" />
+        <div className="heroLogoWrap">
+          <img className="heroLogo" src="/logo.jpg" alt="Bail Reckoner logo" />
+        </div>
+
+        <div className="heroContent">
+          <p className="heroSubtitle">
+            With precision, insight, and dedication, we simplify complex bail eligibility workflows.
+          </p>
+        </div>
+
+        <div className="scrollHint">
+          <span>Scroll Down</span>
+          <span className="scrollHintArrow">↓</span>
+        </div>
+      </section>
+
+      <section className="homeToolsSection" id={TOOLS_ROOT_ID} aria-label="Application tools">
+        <div className="toolsCarouselTop">
+          <h2 className="toolsCarouselHeading">{currentTitle}</h2>
+          <span className="toolsCarouselProgress" aria-live="polite">
+            {toolIndex + 1} / {toolCount}
+          </span>
+        </div>
+
+        <div className="toolsCarousel">
+          <button
+            className="toolsCarouselArrow"
+            type="button"
+            onClick={prev}
+            disabled={!canPrev}
+            aria-label="Previous tool"
+          >
+            ←
+          </button>
+
+          <div className="toolsCarouselViewport">
+            <div
+              className="toolsCarouselTrack"
+              style={{ transform: `translateX(-${toolIndex * 100}%)` }}
+            >
+              {toolPages.map((page) => (
+                <article
+                  key={page.id}
+                  className="toolsCarouselSlide"
+                  id={page.id}
+                  aria-label={page.title}
+                >
+                  {page.node}
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <button
+            className="toolsCarouselArrow"
+            type="button"
+            onClick={next}
+            disabled={!canNext}
+            aria-label="Next tool"
+          >
+            →
+          </button>
+        </div>
+
+        <div className="toolsCarouselMeta" role="group" aria-label="Previous, current, and next tool">
+          <div className="toolsCarouselMetaItem toolsCarouselMetaPrev">
+            <button
+              type="button"
+              className="toolsCarouselMetaBtn toolsCarouselMetaBtnSide"
+              disabled={!canPrev}
+              onClick={prev}
+              aria-label={prevTitle ? `Open previous: ${prevTitle}` : "No previous tool"}
+            >
+              <span className="toolsCarouselMetaValue">{prevTitle || "—"}</span>
+            </button>
+          </div>
+          <div className="toolsCarouselMetaItem toolsCarouselMetaCurrent">
+            <button
+              type="button"
+              className="toolsCarouselMetaBtn toolsCarouselMetaBtnCurrent"
+              onClick={() =>
+                document.getElementById(TOOLS_ROOT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+              aria-label={`Current tool: ${currentTitle}. Scroll tools into view.`}
+            >
+              <span className="toolsCarouselMetaValue">{currentTitle}</span>
+            </button>
+          </div>
+          <div className="toolsCarouselMetaItem toolsCarouselMetaNext">
+            <button
+              type="button"
+              className="toolsCarouselMetaBtn toolsCarouselMetaBtnSide"
+              disabled={!canNext}
+              onClick={next}
+              aria-label={nextTitle ? `Open next: ${nextTitle}` : "No next tool"}
+            >
+              <span className="toolsCarouselMetaValue">{nextTitle || "—"}</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 function App() {
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("home");
   const [toolIndex, setToolIndex] = useState(0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
@@ -55,27 +197,6 @@ function App() {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }, []);
 
-  const toolPages = useMemo(
-    () => [
-      {
-        id: SECTION_IDS.bail,
-        title: "Direct Bail Evaluation",
-        node: <BailForm />,
-      },
-      {
-        id: SECTION_IDS.create,
-        title: "Create Undertrial Record",
-        node: <UndertrialForm />,
-      },
-      {
-        id: SECTION_IDS.evaluate,
-        title: "Evaluate Stored Undertrial",
-        node: <UndertrialEvaluation />,
-      },
-    ],
-    []
-  );
-
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== "Escape") return;
@@ -87,30 +208,20 @@ function App() {
   }, [exportModalOpen]);
 
   const goToSection = useCallback((id) => {
-    setCurrentPage("home");
+    navigate("/");
     setDrawerOpen(false);
     const idx = SECTION_ID_TO_INDEX[id];
     if (typeof idx === "number") setToolIndex(idx);
     requestAnimationFrame(() => {
       document.getElementById(TOOLS_ROOT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
-  }, []);
+  }, [navigate]);
 
   const goHome = () => {
-    setCurrentPage("home");
+    navigate("/");
     setDrawerOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const toolCount = toolPages.length;
-  const canPrev = toolIndex > 0;
-  const canNext = toolIndex < toolCount - 1;
-  const prev = () => setToolIndex((i) => Math.max(0, i - 1));
-  const next = () => setToolIndex((i) => Math.min(toolCount - 1, i + 1));
-
-  const currentTitle = toolPages[toolIndex]?.title ?? "";
-  const prevTitle = toolPages[toolIndex - 1]?.title ?? "";
-  const nextTitle = toolPages[toolIndex + 1]?.title ?? "";
 
   return (
     <div className="app">
@@ -172,7 +283,7 @@ function App() {
                   type="button"
                   onClick={() => {
                     setDrawerOpen(false);
-                    setCurrentPage("about");
+                    navigate("/about");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 >
@@ -229,115 +340,20 @@ function App() {
       <ExportEvaluationModal open={exportModalOpen} onClose={() => setExportModalOpen(false)} />
 
       <main className="container">
-        {currentPage === "about" ? (
-          <AboutPage onBack={goHome} />
-        ) : (
-          <>
-            <section className="heroSection" aria-label="Introduction">
-              <div className="heroOrb" />
-              <div className="heroLogoWrap">
-                <img className="heroLogo" src="/logo.jpg" alt="Bail Reckoner logo" />
-              </div>
-
-              <div className="heroContent">
-                <p className="heroSubtitle">
-                  With precision, insight, and dedication, we simplify complex bail eligibility workflows.
-                </p>
-              </div>
-
-              <div className="scrollHint">
-                <span>Scroll Down</span>
-                <span className="scrollHintArrow">↓</span>
-              </div>
-            </section>
-
-            <section className="homeToolsSection" id={TOOLS_ROOT_ID} aria-label="Application tools">
-              <div className="toolsCarouselTop">
-                <h2 className="toolsCarouselHeading">{currentTitle}</h2>
-                <span className="toolsCarouselProgress" aria-live="polite">
-                  {toolIndex + 1} / {toolCount}
-                </span>
-              </div>
-
-              <div className="toolsCarousel">
-                <button
-                  className="toolsCarouselArrow"
-                  type="button"
-                  onClick={prev}
-                  disabled={!canPrev}
-                  aria-label="Previous tool"
-                >
-                  ←
-                </button>
-
-                <div className="toolsCarouselViewport">
-                  <div
-                    className="toolsCarouselTrack"
-                    style={{ transform: `translateX(-${toolIndex * 100}%)` }}
-                  >
-                    {toolPages.map((page) => (
-                      <article
-                        key={page.id}
-                        className="toolsCarouselSlide"
-                        id={page.id}
-                        aria-label={page.title}
-                      >
-                        {page.node}
-                      </article>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  className="toolsCarouselArrow"
-                  type="button"
-                  onClick={next}
-                  disabled={!canNext}
-                  aria-label="Next tool"
-                >
-                  →
-                </button>
-              </div>
-
-              <div className="toolsCarouselMeta" role="group" aria-label="Previous, current, and next tool">
-                <div className="toolsCarouselMetaItem toolsCarouselMetaPrev">
-                  <button
-                    type="button"
-                    className="toolsCarouselMetaBtn toolsCarouselMetaBtnSide"
-                    disabled={!canPrev}
-                    onClick={prev}
-                    aria-label={prevTitle ? `Open previous: ${prevTitle}` : "No previous tool"}
-                  >
-                    <span className="toolsCarouselMetaValue">{prevTitle || "—"}</span>
-                  </button>
-                </div>
-                <div className="toolsCarouselMetaItem toolsCarouselMetaCurrent">
-                  <button
-                    type="button"
-                    className="toolsCarouselMetaBtn toolsCarouselMetaBtnCurrent"
-                    onClick={() =>
-                      document.getElementById(TOOLS_ROOT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
-                    }
-                    aria-label={`Current tool: ${currentTitle}. Scroll tools into view.`}
-                  >
-                    <span className="toolsCarouselMetaValue">{currentTitle}</span>
-                  </button>
-                </div>
-                <div className="toolsCarouselMetaItem toolsCarouselMetaNext">
-                  <button
-                    type="button"
-                    className="toolsCarouselMetaBtn toolsCarouselMetaBtnSide"
-                    disabled={!canNext}
-                    onClick={next}
-                    aria-label={nextTitle ? `Open next: ${nextTitle}` : "No next tool"}
-                  >
-                    <span className="toolsCarouselMetaValue">{nextTitle || "—"}</span>
-                  </button>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <HomePage
+                toolIndex={toolIndex}
+                setToolIndex={setToolIndex}
+                setDrawerOpen={setDrawerOpen}
+                setExportModalOpen={setExportModalOpen}
+              />
+            }
+          />
+          <Route path="/about" element={<AboutPage onBack={goHome} />} />
+        </Routes>
       </main>
     </div>
   );

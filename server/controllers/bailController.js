@@ -1,6 +1,26 @@
 const LegalSection = require("../models/LegalSection");
 const Undertrial = require("../models/Undertrial");
 
+/**
+ * Determine whether a section carries life-imprisonment or death-penalty
+ * severity, using both explicit boolean flags and text-based fallback.
+ */
+const isLifeOrDeathSection = (section) => {
+  const text = `${section.offenceName || ""} ${section.description || ""}`.toLowerCase();
+  return (
+    section.deathPenaltyPossible === true ||
+    section.lifeImprisonmentPossible === true ||
+    text.includes("death") ||
+    text.includes("imprisonment for life") ||
+    text.includes("life imprisonment")
+  );
+};
+
+/**
+ * Core rule-based bail evaluation logic.
+ *
+ * Exported separately so it can be tested independently of Express.
+ */
 const performEvaluation = async ({
   sections,
   timeServedYears,
@@ -17,29 +37,33 @@ const performEvaluation = async ({
     throw new Error("No matching legal sections found");
   }
 
-  const isLifeOrDeathSection = (section) => {
-    const text = `${section.offenceName || ""} ${section.description || ""}`.toLowerCase();
-    return (
-      section.deathPenaltyPossible === true ||
-      section.lifeImprisonmentPossible === true ||
-      text.includes("death") ||
-      text.includes("imprisonment for life") ||
-      text.includes("life imprisonment")
-    );
-  };
-
+  /* ------------------------------------------------------------------
+   * Determine the highest-punishment section.
+   *
+   * Life/death sections always rank above non-life/death sections.
+   * Among life/death sections we compare maxPunishmentYears (higher wins).
+   * Among non-life/death sections we compare maxPunishmentYears.
+   * ------------------------------------------------------------------ */
   let maxPunishment = 0;
   let highestSection = null;
   let highestSectionHasLifeOrDeath = false;
 
   legalData.forEach((section) => {
     const sectionIsLifeOrDeath = isLifeOrDeathSection(section);
-    if (sectionIsLifeOrDeath && !highestSectionHasLifeOrDeath) {
-      highestSection = section.sectionNumber;
-      highestSectionHasLifeOrDeath = true;
-      return;
-    }
-    if (!sectionIsLifeOrDeath && !highestSectionHasLifeOrDeath && section.maxPunishmentYears > maxPunishment) {
+
+    if (sectionIsLifeOrDeath) {
+      if (!highestSectionHasLifeOrDeath) {
+        // First life/death section — always takes over
+        highestSection = section.sectionNumber;
+        maxPunishment = section.maxPunishmentYears;
+        highestSectionHasLifeOrDeath = true;
+      } else if (section.maxPunishmentYears > maxPunishment) {
+        // Another life/death section with higher punishment
+        highestSection = section.sectionNumber;
+        maxPunishment = section.maxPunishmentYears;
+      }
+    } else if (!highestSectionHasLifeOrDeath && section.maxPunishmentYears > maxPunishment) {
+      // Non-life/death section, and we haven't seen any life/death section yet
       maxPunishment = section.maxPunishmentYears;
       highestSection = section.sectionNumber;
     }
@@ -52,6 +76,8 @@ const performEvaluation = async ({
   const priorRecordRisk = Math.min(previousCriminalRecords * 2, 6);
   const riskScore = flightRisk + witnessRisk + priorRecordRisk;
   const RISK_THRESHOLD = 7;
+
+  const halfTerm = highestSectionHasLifeOrDeath ? null : maxPunishment / 2;
 
   let eligible = false;
   let reason = "";
@@ -69,6 +95,12 @@ const performEvaluation = async ({
   } else {
     eligible = true;
     reason = "All offences are bailable";
+
+    // Section 436A CrPC: if the undertrial has served half or more of the
+    // maximum punishment, eligibility is reinforced by statutory provision.
+    if (halfTerm !== null && timeServedYears >= halfTerm && halfTerm > 0) {
+      reason = `Eligible under Section 436A CrPC — time served (${timeServedYears} yrs) meets or exceeds half the maximum punishment (${halfTerm} yrs). All offences are bailable.`;
+    }
   }
 
   // Procedural Requirements
@@ -99,7 +131,7 @@ const performEvaluation = async ({
     sectionsEvaluated: sectionDetails,
     highestPunishmentSection: highestSection,
     maxPunishmentYears: highestSectionHasLifeOrDeath ? null : maxPunishment,
-    halfTerm: highestSectionHasLifeOrDeath ? null : maxPunishment / 2,
+    halfTerm,
     timeServedYears,
     riskScore,
     previousCriminalRecords,
@@ -109,7 +141,7 @@ const performEvaluation = async ({
   };
 };
 
-exports.evaluateBail = async (req, res) => {
+exports.evaluateBail = async (req, res, next) => {
 
   const {
     sections,
@@ -170,13 +202,12 @@ exports.evaluateBail = async (req, res) => {
     if (error.message === "No matching legal sections found") {
       return res.status(404).json({ message: error.message });
     }
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    next(error);
   }
 };
 
 
-exports.evaluateUndertrialBail = async (req, res) => {
+exports.evaluateUndertrialBail = async (req, res, next) => {
 
   try {
     const undertrial = await Undertrial.findById(req.params.id);
@@ -207,7 +238,10 @@ exports.evaluateUndertrialBail = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    next(error);
   }
 };
+
+// Export for testing
+exports._performEvaluation = performEvaluation;
+exports._isLifeOrDeathSection = isLifeOrDeathSection;

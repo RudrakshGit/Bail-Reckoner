@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { createUndertrial, listLegalSections } from "../api/api";
+import { useState } from "react";
+import { createUndertrial } from "../api/api";
+import useSectionSuggestions from "../hooks/useSectionSuggestions";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import FormField from "./ui/FormField";
@@ -11,7 +12,6 @@ export default function UndertrialForm() {
   const [name, setName] = useState("");
   const [prisonerId, setPrisonerId] = useState("");
   const [sections, setSections] = useState("");
-  const [sectionSuggestions, setSectionSuggestions] = useState([]);
   const [timeServedYears, setTimeServedYears] = useState("");
   const [previousCriminalRecords, setPreviousCriminalRecords] = useState(0);
   const [flightRisk, setFlightRisk] = useState(0);
@@ -21,6 +21,8 @@ export default function UndertrialForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const sectionSuggestions = useSectionSuggestions(sections);
 
   const clearAll = () => {
     setName("");
@@ -34,27 +36,6 @@ export default function UndertrialForm() {
     setError(null);
     setCopied(false);
   };
-
-  useEffect(() => {
-    let alive = true;
-    const q = sections.split(",").slice(-1)[0]?.trim() || "";
-    if (!q) {
-      setSectionSuggestions([]);
-      return;
-    }
-    listLegalSections(q)
-      .then((items) => {
-        if (!alive) return;
-        setSectionSuggestions(items);
-      })
-      .catch(() => {
-        if (!alive) return;
-        setSectionSuggestions([]);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [sections]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

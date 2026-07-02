@@ -1,6 +1,6 @@
 const Undertrial = require("../models/Undertrial");
 
-exports.createUndertrial = async (req, res) => {
+exports.createUndertrial = async (req, res, next) => {
   try {
     const {
       name,
@@ -52,14 +52,11 @@ exports.createUndertrial = async (req, res) => {
     });
     res.status(201).json(undertrial);
   } catch (error) {
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ message: "Invalid undertrial data", details: error.message });
-    }
-    res.status(500).json({ message: "Error creating undertrial" });
+    next(error);
   }
 };
 
-exports.getUndertrialById = async (req, res) => {
+exports.getUndertrialById = async (req, res, next) => {
   try {
     const undertrial = await Undertrial.findById(req.params.id);
     if (!undertrial) {
@@ -67,9 +64,6 @@ exports.getUndertrialById = async (req, res) => {
     }
     res.json(undertrial);
   } catch (error) {
-    if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid undertrial id" });
-    }
-    res.status(500).json({ message: "Error fetching undertrial" });
+    next(error);
   }
 };

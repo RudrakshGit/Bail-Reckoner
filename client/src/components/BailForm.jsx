@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { evaluateBail, listLegalSections } from "../api/api";
+import { useState } from "react";
+import { evaluateBail } from "../api/api";
+import useSectionSuggestions from "../hooks/useSectionSuggestions";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import FormField from "./ui/FormField";
@@ -10,7 +11,6 @@ import StatusBadge from "./ui/StatusBadge";
 
 export default function BailForm() {
   const [sections, setSections] = useState("");
-  const [sectionSuggestions, setSectionSuggestions] = useState([]);
   const [timeServedYears, setTimeServedYears] = useState("");
   const [previousCriminalRecords, setPreviousCriminalRecords] = useState(0);
   const [flightRisk, setFlightRisk] = useState(0);
@@ -18,6 +18,8 @@ export default function BailForm() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const sectionSuggestions = useSectionSuggestions(sections);
 
   const highestSectionDetail = result?.sectionsEvaluated?.find(
     (x) => x.sectionNumber === result?.highestPunishmentSection
@@ -41,27 +43,6 @@ export default function BailForm() {
     setResult(null);
     setError(null);
   };
-
-  useEffect(() => {
-    let alive = true;
-    const q = sections.split(",").slice(-1)[0]?.trim() || "";
-    if (!q) {
-      setSectionSuggestions([]);
-      return;
-    }
-    listLegalSections(q)
-      .then((items) => {
-        if (!alive) return;
-        setSectionSuggestions(items);
-      })
-      .catch(() => {
-        if (!alive) return;
-        setSectionSuggestions([]);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [sections]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
